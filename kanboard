@@ -1,0 +1,51 @@
+server {
+    # We also enable the SPDY protocol
+    listen 443 ssl ;
+
+    # Our SSL certificate
+    ssl on;
+    ssl_certificate /etc/nginx/ssl/server.crt;
+    ssl_certificate_key /etc/nginx/ssl/server.key;
+
+    # You can change the default root directory here
+    root /kanboard;
+
+    index index.php;
+
+    # Your domain name
+    server_name localhost;
+
+    # The maximum body size, useful for file uploads
+    client_max_body_size 10M;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /kanboard;
+    }
+
+    # PHP-FPM configuration
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi.conf;
+    }
+
+    # Deny access to the directory data
+    location ~* /data {
+            deny all;
+            return 404;
+    }
+
+    # Deny access to .htaccess
+    location ~ /\.ht {
+            deny all;
+            return 404;
+    }
+}
